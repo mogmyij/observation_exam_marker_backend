@@ -131,7 +131,7 @@ const TEFObjSchema = new mongoose.Schema({
 const UserObjSchema = new mongoose.Schema({
 	name: String,
 	nric: String,
-	id: Number,
+	id: String,
 	questionOneObj: QuestionOneObjSchema,
 	questionOneTEF: TEFObjSchema,
 	questionTwoObj: QuestionTwoObjSchema,
