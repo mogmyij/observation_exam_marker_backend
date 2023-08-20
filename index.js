@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const app = express();
+const path=require("path")
 const mongoose = require("mongoose");
 const User = require("./models/user");
 const cors = require("cors");
@@ -9,7 +10,7 @@ const cors = require("cors");
 //app.use(cors)
 app.use(express.json());
 //responds with the app when root of website is visited
-app.use(express.static("./observation_exam_marker/build"));
+app.use(express.static("build"));
 
 //add user most often used when frontend login page is submitted
 app.post("/api/users", (request, response) => {
@@ -23,12 +24,14 @@ app.post("/api/users", (request, response) => {
 app.put("/api/users/:id", (request, response) => {
 	const data = request.body;
 	const id = request.params.id;
-	User.findOneAndUpdate({_id:id},data,{new:true}).then(data=>{
-		return response.json(data)
-	})
+	User.findOneAndUpdate({ _id: id }, data, { new: true }).then((data) => {
+		return response.json(data);
+	});
 });
 
-
+app.get("/*",(request,response)=>{
+	response.sendFile(path.join(__dirname,"/build/index.html"))
+})
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
