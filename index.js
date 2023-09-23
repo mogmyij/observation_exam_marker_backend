@@ -5,16 +5,18 @@ const path = require("path");
 const mongoose = require("mongoose");
 const User = require("./models/user");
 const UserScore = require("./models/userScore");
+const user = require("./models/user");
+const { log } = require("console");
+const router = express.Router();
 
 //express middleware (executes after getting request)
 app.use(express.json());
-//responds with the app when root of website is visited
-app.use(express.static("build"));
 
+/*
 const testUserScore = new UserScore({
 	id: 0,
 
-	question1a1Score: 0,
+	question1a1Score: 5,
 	question1a2Score: 0,
 	question1a3Score: 0,
 	question1c1Score: 0,
@@ -45,17 +47,14 @@ const testUserScore = new UserScore({
 	question5TEFScore: 0,
 
 	totalScore: 0,
-	user: "64db8834a0585aa78433fd9e",
+	user: "64e42f59fbd2a5c629374948",
 });
 
-UserScore.findById("64e243d64df890c903d12944")
-	.populate(
-		"user",
-		"-questionOneTEF -questionTwoTEF -questionThreeTEF -questionFourTEF -questionFiveTEF"
-	)
-	.then((response) => {
-		console.log(response);
-	});
+testUserScore.save()*/
+
+const testVirtual = User.findById("64e42f59fbd2a5c629374948").populate("userScore").then(response=>{
+	console.log(response.userScore);
+})
 
 //add user most often used when frontend login page is submitted
 app.post("/api/users", (request, response) => {
@@ -63,6 +62,17 @@ app.post("/api/users", (request, response) => {
 	newUser.save().then((dbResponse) => {
 		return response.json(dbResponse);
 	});
+});
+
+app.get("/api/userScore", async (request, response) => {
+	const users = await user.find();
+	const scores = await Promise.all(users.map(async (curr) => {
+		const populatedUser = await curr.populate("userScore")
+		return populatedUser.userScore
+	}
+	))
+	console.log(scores);
+	return response.json(scores)
 });
 
 //update the user data: most often used when frontend user data is updated eg when navigating between questions
@@ -74,6 +84,11 @@ app.put("/api/users/:id", (request, response) => {
 	});
 });
 
+
+
+//---- STATIC ROUTES -----//
+//responds with the app when root of website is visited
+app.use(express.static("build"));
 app.get("/*", (request, response) => {
 	response.sendFile(path.join(__dirname, "/build/index.html"));
 });

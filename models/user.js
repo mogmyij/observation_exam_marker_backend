@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 
+//contains user submitted results
+
 const QuestionFourObjSchema = new mongoose.Schema({
 	b1: String,
 	c1: String,
@@ -128,20 +130,23 @@ const TEFObjSchema = new mongoose.Schema({
 	PRCorrections: PRCorrectionsSchema,
 });
 
-const UserObjSchema = new mongoose.Schema({
-	name: String,
-	nric: String,
-	id: String,
-	questionOneObj: QuestionOneObjSchema,
-	questionOneTEF: TEFObjSchema,
-	questionTwoObj: QuestionTwoObjSchema,
-	questionTwoTEF: TEFObjSchema,
-	questionThreeObj: QuestionThreeObjSchema,
-	questionThreeTEF: TEFObjSchema,
-	questionFourObj: QuestionFourObjSchema,
-	questionFourTEF: TEFObjSchema,
-	questionFiveTEF: TEFObjSchema,
-});
+const UserObjSchema = new mongoose.Schema(
+	{
+		name: String,
+		nric: String,
+		id: String,
+		questionOneObj: QuestionOneObjSchema,
+		questionOneTEF: TEFObjSchema,
+		questionTwoObj: QuestionTwoObjSchema,
+		questionTwoTEF: TEFObjSchema,
+		questionThreeObj: QuestionThreeObjSchema,
+		questionThreeTEF: TEFObjSchema,
+		questionFourObj: QuestionFourObjSchema,
+		questionFourTEF: TEFObjSchema,
+		questionFiveTEF: TEFObjSchema,
+	},
+	{ toJSON: { virtuals: true }, }
+);
 
 //URI to the database and password from .env file
 const databasePassword = process.env.DATABASE_PASSWORD;
@@ -151,6 +156,14 @@ mongoose.connect(databaseUrl).catch((error) => {
 	console.log("cannot connect", error);
 });
 
+UserObjSchema.virtual("userScore", {
+	ref: "UserScore",
+	localField: "_id",
+	foreignField: "user",
+	justOne: true,
+});
+
+//remove default added _id field from all objects when using .json
 function removeId(object) {
 	let objectKeyArray = Object.keys(object);
 
