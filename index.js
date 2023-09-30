@@ -8,10 +8,12 @@ const UserScore = require("./models/userScore");
 const user = require("./models/user");
 const { log } = require("console");
 const router = express.Router();
+const cors = require("cors");
+const userScore = require("./models/userScore");
 
 //express middleware (executes after getting request)
 app.use(express.json());
-
+app.use(cors());
 /*
 const testUserScore = new UserScore({
 	id: 0,
@@ -52,27 +54,39 @@ const testUserScore = new UserScore({
 
 testUserScore.save()*/
 
-const testVirtual = User.findById("64e42f59fbd2a5c629374948").populate("userScore").then(response=>{
-	console.log(response.userScore);
-})
+const testVirtual = User.findById("64e42f59fbd2a5c629374948")
+	.populate("userScore")
+	.then((response) => {
+		console.log(response.userScore);
+	});
 
 //add user most often used when frontend login page is submitted
 app.post("/api/users", (request, response) => {
 	const newUser = new User(request.body);
-	newUser.save().then((dbResponse) => {
-		return response.json(dbResponse);
+	const newUserScore = new UserScore({ user: newUser._id });
+
+	//save both newUser and newUserScore
+	newUserScore.save().then((saved) => {
+		newUser.save().then((dbResponse) => {
+			return response.json(dbResponse);
+		});
 	});
 });
 
+//get list of all userScores by populating the virtuals of the user documents
 app.get("/api/userScore", async (request, response) => {
-	const users = await user.find();
-	const scores = await Promise.all(users.map(async (curr) => {
-		const populatedUser = await curr.populate("userScore")
-		return populatedUser.userScore
-	}
-	))
-	console.log(scores);
-	return response.json(scores)
+	/*const users = await user.find();
+	const scores = await Promise.all(
+		users.map(async (curr) => {
+			const populatedUser = await curr.populate("userScore");
+			return populatedUser.userScore;
+		})
+	);
+	return response.json(scores);*/
+	const userScores = await userScore
+		.find()
+		.populate({ path: "user", select: "name nric -_id" });
+	return response.json(userScores);
 });
 
 //update the user data: most often used when frontend user data is updated eg when navigating between questions
@@ -83,8 +97,6 @@ app.put("/api/users/:id", (request, response) => {
 		return response.json(data);
 	});
 });
-
-
 
 //---- STATIC ROUTES -----//
 //responds with the app when root of website is visited
