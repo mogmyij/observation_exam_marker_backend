@@ -48,16 +48,17 @@ app.put("/api/users/:id", (request, response) => {
 });
 
 //---- STATIC ROUTES -----//
-//responds with the app when root of website is visited
-app.use(express.static("staticRoutes/adminSite/build"));
+//responds with the admin or user website based on URL used
+//the express.static option index is set to false to prevent URL overlapping
+app.use(express.static("staticRoutes/userSite/build",{index: false}));
+app.use(express.static("staticRoutes/adminSite/build",{index: false}));
 app.get("/tfcadmin", (request, response) => {
 	response.sendFile(path.join(__dirname, "/staticRoutes/adminSite/build/index.html"));
 });
-
-app.use(express.static("staticRoutes/userSite/build"));
 app.get("/*", (request, response) => {
 	response.sendFile(path.join(__dirname, "/staticRoutes/userSite/build/index.html"));
 });
+
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
