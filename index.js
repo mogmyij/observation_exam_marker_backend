@@ -10,6 +10,7 @@ const { log } = require("console");
 const router = express.Router();
 const cors = require("cors");
 const userScore = require("./models/userScore");
+const markTEF  = require("./services/markTEF");
 
 //express middleware (executes after getting request)
 app.use(express.json());
@@ -29,15 +30,6 @@ app.post("/api/users", (request, response) => {
 	});
 });
 
-//get list of all userScores by populating the virtuals of the user documents
-app.get("/api/userScore", async (request, response) => {
-	const userScores = await userScore
-		.find()
-		.sort({_id: -1})
-		.populate({ path: "user", select: "name nric -_id" });
-	return response.json(userScores);
-});
-
 //update the user data: most often used when frontend user data is updated eg when navigating between questions
 app.put("/api/users/:id", (request, response) => {
 	const data = request.body;
@@ -47,18 +39,41 @@ app.put("/api/users/:id", (request, response) => {
 	});
 });
 
-//---- STATIC ROUTES -----//
-//responds with the admin or user website based on URL used
-//the express.static option index is set to false to prevent URL overlapping
-app.use(express.static("staticRoutes/userSite/build",{index: false}));
-app.use(express.static("staticRoutes/adminSite/build",{index: false}));
-app.get("/tfcadmin", (request, response) => {
-	response.sendFile(path.join(__dirname, "/staticRoutes/adminSite/build/index.html"));
-});
-app.get("/*", (request, response) => {
-	response.sendFile(path.join(__dirname, "/staticRoutes/userSite/build/index.html"));
+//get list of all userScores by populating the virtuals of the user documents
+app.get("/api/userScore", async (request, response) => {
+	const userScores = await userScore
+		.find()
+		.sort({ _id: -1 })
+		.populate({ path: "user", select: "name nric -_id" });
+	return response.json(userScores);
 });
 
+//mark and update the scores of the specifed users in the request body
+app.patch("/api/markUserScore", async (request, response) => {
+	const data = request.body;
+	data.map(
+		curr=>{
+			markTEF(curr);
+		}
+	);
+});
+
+//------------------------ STATIC ROUTES ------------------------------------//
+//responds with the admin or user website based on URL used
+//the express.static option index is set to false to prevent URL overlapping
+//if it is true it will automatically serve the index.js file
+app.use(express.static("staticRoutes/userSite/build", { index: false }));
+app.use(express.static("staticRoutes/adminSite/build", { index: false }));
+app.get("/tfcadmin", (request, response) => {
+	response.sendFile(
+		path.join(__dirname, "/staticRoutes/adminSite/build/index.html")
+	);
+});
+app.get("/*", (request, response) => {
+	response.sendFile(
+		path.join(__dirname, "/staticRoutes/userSite/build/index.html")
+	);
+});
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
